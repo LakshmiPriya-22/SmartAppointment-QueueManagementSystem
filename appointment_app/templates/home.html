@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Appointment Booking</title>
+</head>
+<body>
+    <h1>Book Appointment</h1>
+
+    {% if success %}
+        <h2 style="color: green;">
+            Appointment booked successfully!
+        </h2>
+        <h3>Your Token Number: {{ token }}</h3>
+        <hr>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Name:</label><br>
+        <input type="text" name="name" required><br><br>
+
+        <label>Service:</label><br>
+        <input type="text" name="service" required><br><br>
+
+        <button type="submit">Book Appointment</button>
+    </form>
+</body>
+</html>
