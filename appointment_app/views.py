@@ -1,53 +1,52 @@
 from django.shortcuts import render, redirect
-from django.utils import timezone
-from django.db.models import Max
-
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-
+from django.http import JsonResponse
 from .models import Appointment
-from .serializers import AppointmentSerializer
 
-
-# Home page (user side)
+# Home Page
 def home(request):
-    return render(request, 'appointment_app/home.html')
+    return render(request, "home.html")
 
 
-# Receptionist dashboard
+# Receptionist Dashboard
 def receptionist_dashboard(request):
-    appointments = Appointment.objects.all().order_by('token_number')
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "call_next":
+            next_appt = Appointment.objects.filter(status="PENDING").order_by("token_number").first()
+            if next_appt:
+                next_appt.status = "CALLED"
+                next_appt.save()
+
+        elif action == "mark_done":
+            appt_id = request.POST.get("appointment_id")
+            Appointment.objects.filter(id=appt_id).update(status="DONE")
+
+        return redirect("receptionist")
+
+    pending = Appointment.objects.filter(status="PENDING").order_by("token_number")
+    called = Appointment.objects.filter(status="CALLED").order_by("-called_at").first()
+
     return render(
         request,
-        'appointment_app/receptionist.html',
-        {'appointments': appointments}
+        "appointment_app/receptionist.html",
+        {
+            "pending": pending,
+            "called": called,
+        },
     )
 
 
-# Book appointment (token auto-generated)
-@api_view(['POST'])
-def book_appointment(request):
-    last_token = Appointment.objects.aggregate(Max('token_number'))['token_number__max']
-    next_token = 1 if last_token is None else last_token + 1
+# ✅ LIVE DISPLAY SCREEN (TV VIEW)
+def live_display(request):
+    current = Appointment.objects.filter(status="CALLED").order_by("-called_at").first()
+    upcoming = Appointment.objects.filter(status="PENDING").order_by("token_number")[:5]
 
-    serializer = AppointmentSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(
-            token_number=next_token,
-            booked_at=timezone.now()
-        )
-        return Response(serializer.data, status=201)
-
-    return Response(serializer.errors, status=400)
-
-
-# Call next token
-def call_next_token(request):
-    appointment = Appointment.objects.filter(status='pending').order_by('token_number').first()
-
-    if appointment:
-        appointment.status = 'called'
-        appointment.called_at = timezone.now()
-        appointment.save()
-
-    return redirect('receptionist')
+    return render(
+        request,
+        "appointment_app/live_display.html",
+        {
+            "current": current,
+            "upcoming": upcoming,
+        },
+    )

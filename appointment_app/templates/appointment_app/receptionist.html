@@ -3,33 +3,31 @@
 <head>
     <title>Receptionist Dashboard</title>
     <style>
-        body {
-            font-family: Arial;
-            background: #f4f6f8;
-            padding: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: center;
-        }
-        th {
-            background: #007bff;
-            color: white;
-        }
-        h1 {
-            color: #333;
-        }
+        body { font-family: Arial; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: center; }
+        th { background: #f2f2f2; }
+
+        .called { background-color: #ffeaa7; }
+        .done { background-color: #dfe6e9; }
     </style>
 </head>
 <body>
 
-<h1>Receptionist Dashboard</h1>
+<h2>Receptionist Dashboard</h2>
+
+{% if current %}
+    <h3>🔔 Current Token: {{ current.token_number }} ({{ current.name }})</h3>
+{% else %}
+    <h3>No token is being served</h3>
+{% endif %}
+
+<form action="/call-next/" method="post">
+    {% csrf_token %}
+    <button type="submit">Call Next Token</button>
+</form>
+
+<br>
 
 <table>
     <tr>
@@ -37,21 +35,24 @@
         <th>Name</th>
         <th>Service</th>
         <th>Status</th>
+        <th>Action</th>
     </tr>
 
-    {% for appointment in appointments %}
-    <tr>
-        <td>{{ appointment.token_number }}</td>
-        <td>{{ appointment.name }}</td>
-        <td>{{ appointment.service }}</td>
-        <td>{{ appointment.status }}</td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="4">No appointments</td>
+    {% for app in appointments %}
+    <tr class="{% if app.status == 'called' %}called{% elif app.status == 'done' %}done{% endif %}">
+        <td>{{ app.token_number }}</td>
+        <td>{{ app.name }}</td>
+        <td>{{ app.service }}</td>
+        <td>{{ app.status }}</td>
+        <td>
+            {% if app.status == 'called' %}
+                <a href="/done/{{ app.id }}/">Mark Done</a>
+            {% else %}
+                -
+            {% endif %}
+        </td>
     </tr>
     {% endfor %}
-
 </table>
 
 </body>

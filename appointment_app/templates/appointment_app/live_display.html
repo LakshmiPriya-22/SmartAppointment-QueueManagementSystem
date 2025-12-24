@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Queue Display</title>
+    <meta http-equiv="refresh" content="5"> <!-- Auto refresh every 5 sec -->
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: black;
+            color: white;
+            text-align: center;
+        }
+        h1 {
+            font-size: 60px;
+        }
+        h2 {
+            font-size: 40px;
+        }
+        .token {
+            font-size: 120px;
+            color: yellow;
+        }
+        .upcoming {
+            margin-top: 40px;
+            font-size: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Now Serving</h1>
+
+    {% if current %}
+        <div class="token">TOKEN {{ current.token_number }}</div>
+    {% else %}
+        <div class="token">---</div>
+    {% endif %}
+
+    <h2>Upcoming Tokens</h2>
+
+    <div class="upcoming">
+        {% for appt in upcoming %}
+            TOKEN {{ appt.token_number }} &nbsp;&nbsp;
+        {% empty %}
+            No pending tokens
+        {% endfor %}
+    </div>
+
+</body>
+</html>
